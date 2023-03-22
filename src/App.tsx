@@ -1,26 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import './App.css'
+import Editor from "react-simple-code-editor";
+import {Grammar, highlight, Token, tokenize} from "prismjs";
+import {bytecodeGrammar} from "./lang";
+import "prism-themes/themes/prism-darcula.css";
+import {invoke} from "@tauri-apps/api/tauri";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const safeTokenize = (code: string, grammar: Grammar): Token[] => {
+  return tokenize(code, grammar).filter(v => typeof v !== "string") as Token[]
 }
 
-export default App;
+const runCode = async (code: string) => {
+  await invoke('run_code', { tokens: safeTokenize(code, bytecodeGrammar)});
+}
+
+function App() {
+  const [code, setCode] = React.useState("");
+  return (
+    <div className="App">
+      <Editor
+        value={code}
+        onValueChange={code => setCode(code)}
+        highlight={code => highlight(code, bytecodeGrammar, 'bytecode')}
+        padding={10}
+        style={{
+          fontFamily: '"Fira code", "Fira Mono", monospace',
+          fontSize: 12,
+          minHeight: '300px',
+        }}
+      />
+      <button onClick={() => runCode(code)}>Run</button>
+    </div>
+  )
+}
+
+export default App
