@@ -1156,7 +1156,7 @@ dependencies = [
 [[package]]
 name = "eth-types"
 version = "0.1.0"
-source = "git+https://github.com/scroll-tech/zkevm-circuits?branch=develop#4649af96fa341e0960b35658f64c7c272e4fb009"
+source = "git+https://github.com/lightsing/zkevm-circuits?branch=windows#3ea01d6b6ace3ce49179c74e28633b044c1942fa"
 dependencies = [
  "ethers-core",
  "ethers-signers",
@@ -1274,7 +1274,7 @@ dependencies = [
 [[package]]
 name = "external-tracer"
 version = "0.1.0"
-source = "git+https://github.com/scroll-tech/zkevm-circuits?branch=develop#4649af96fa341e0960b35658f64c7c272e4fb009"
+source = "git+https://github.com/lightsing/zkevm-circuits?branch=windows#3ea01d6b6ace3ce49179c74e28633b044c1942fa"
 dependencies = [
  "eth-types",
  "geth-utils",
@@ -1603,7 +1603,7 @@ dependencies = [
 [[package]]
 name = "geth-utils"
 version = "0.1.0"
-source = "git+https://github.com/scroll-tech/zkevm-circuits?branch=develop#4649af96fa341e0960b35658f64c7c272e4fb009"
+source = "git+https://github.com/lightsing/zkevm-circuits?branch=windows#3ea01d6b6ace3ce49179c74e28633b044c1942fa"
 dependencies = [
  "env_logger 0.9.3",
  "gobuild",
@@ -1742,8 +1742,7 @@ dependencies = [
 [[package]]
 name = "gobuild"
 version = "0.1.0-alpha.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71e156a4ddbf3deb5e8116946c111413bd9a5679bdc1536c78a60618a7a9ac9e"
+source = "git+https://github.com/scroll-tech/gobuild#fe689b1a8a7425245b3bbb68da59825837cd61de"
 dependencies = [
  "cc",
 ]
@@ -2450,7 +2449,7 @@ dependencies = [
 [[package]]
 name = "mock"
 version = "0.1.0"
-source = "git+https://github.com/scroll-tech/zkevm-circuits?branch=develop#4649af96fa341e0960b35658f64c7c272e4fb009"
+source = "git+https://github.com/lightsing/zkevm-circuits?branch=windows#3ea01d6b6ace3ce49179c74e28633b044c1942fa"
 dependencies = [
  "eth-types",
  "ethers-core",
