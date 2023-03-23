@@ -7,8 +7,12 @@ import Console from "./components/console";
 import {Addresses} from "./components/addresses";
 import {CodeEditor} from "./components/editor";
 
+const Store = new Map();
+
 function App() {
   const [logs, setLogs] = React.useState([]);
+  const [addresses, setAddresses] = React.useState<readonly string[]>(["0x000000000000000000000000000000000cafe001"]);
+
   return (
     <Stack
       direction="column"

@@ -3,11 +3,12 @@ import AddIcon from "@mui/icons-material/Add";
 import React from "react";
 import {AddressItem} from "./address";
 import {AddressDialog} from "./addressDialog";
-
+import { useAtom } from "jotai";
+import {addressesAtom} from "../atoms";
 
 export const Addresses = () => {
-  const [addresses, setAddresses] = React.useState<readonly string[]>(["0x000000000000000000000000000000000cafe001"]);
 
+  const [addresses, setAddresses] = useAtom(addressesAtom);
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   return (
@@ -19,12 +20,12 @@ export const Addresses = () => {
             address={address}
             onEdit={
               (newVal) => {
-                setAddresses((old) => [...old.slice(0, index), newVal, ...old.slice(index + 1)]);
+                setAddresses([...addresses.slice(0, index), newVal, ...addresses.slice(index + 1)]);
               }
             }
             onDelete={
               () => {
-                setAddresses(old => old.slice(0, index).concat(old.slice(index + 1)))
+                setAddresses(addresses.slice(0, index).concat(addresses.slice(index + 1)))
               }
             }
           />
@@ -38,7 +39,7 @@ export const Addresses = () => {
         initialValue=""
         onSave={
           (address) => {
-            setAddresses(old => [...old, address]);
+            setAddresses([...addresses, address]);
             setDialogOpen(false);
           }
         }

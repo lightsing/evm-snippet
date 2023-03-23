@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Grid, MenuItem, TextField, Typography } from '@mui/material';
+import {useAtom} from "jotai";
+import {addressesAtom} from "../atoms";
 
 const Panel = () => {
+  const [addresses] = useAtom(addressesAtom);
   const [txFrom, setTxFrom] = useState('');
   const [txTo, setTxTo] = useState('');
   const [gas, setGas] = useState('');
@@ -31,9 +34,13 @@ const Panel = () => {
           fullWidth
           InputProps={{sx: {fontFamily: '"Fira code", "Fira Mono", monospace'}}}
         >
-          {/* Add your options here */}
-          <MenuItem value="option1">Option 1</MenuItem>
-          <MenuItem value="option2">Option 2</MenuItem>
+          {
+            addresses.map((address, index) => (
+              <MenuItem key={index} value={address}>
+                {address}
+              </MenuItem>
+            ))
+          }
         </TextField>
       </Grid>
       <Grid item xs={12}>
@@ -45,9 +52,13 @@ const Panel = () => {
           fullWidth
           InputProps={{sx: {fontFamily: '"Fira code", "Fira Mono", monospace'}}}
         >
-          {/* Add your options here */}
-          <MenuItem value="option1">Option 1</MenuItem>
-          <MenuItem value="option2">Option 2</MenuItem>
+          {
+            addresses.map((address, index) => (
+              <MenuItem key={index} value={address}>
+                {address}
+              </MenuItem>
+            ))
+          }
         </TextField>
       </Grid>
       <Grid item xs={6}>
