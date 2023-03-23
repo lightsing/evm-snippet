@@ -14,15 +14,17 @@ export const CodeEditor = () => {
     const [currentEditingAddress, setCurrentEditingAddress] = React.useState<string | null>(null)
     const [code, setCode] = React.useState('')
 
-    if (activeAddress !== currentEditingAddress) {
-        if (activeAddress !== null) {
-            setCode(addressCodeMap.get(activeAddress) ?? '')
-        } else {
-            setCode('')
+    React.useEffect(() => {
+        if (activeAddress !== currentEditingAddress) {
+            if (activeAddress !== null) {
+                setCode(addressCodeMap.get(activeAddress) ?? '')
+            } else {
+                setCode('')
+            }
+            setCurrentEditingAddress(activeAddress)
+            setLogs([])
         }
-        setCurrentEditingAddress(activeAddress)
-        setLogs([])
-    }
+    }, [activeAddress, currentEditingAddress])
 
     const runCode = async (code: string) => {
         try {
