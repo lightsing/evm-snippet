@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@fontsource/fira-code": "^4.5.13",
+    "@fontsource/fira-mono": "^4.5.10",
+    "@fontsource/roboto": "^4.5.8",
+    "@mui/icons-material": "^5.11.11",
+    "@mui/material": "^5.11.14",
     "@tauri-apps/api": "^1.2.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
