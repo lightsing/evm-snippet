@@ -1,31 +1,14 @@
 import React from 'react'
 import './App.css'
-import Editor from "react-simple-code-editor";
-import {Grammar, highlight, Token, tokenize} from "prismjs";
-import {bytecodeGrammar, excludeTokens} from "./lang";
 import "prism-themes/themes/prism-darcula.css";
-import {invoke} from "@tauri-apps/api/tauri";
-import {Button, Grid, Stack} from "@mui/material";
-
-const safeTokenize = (code: string, grammar: Grammar): Token[] => {
-    const tokens = tokenize(code, grammar)
-        .map(v => {
-            if (typeof v === "string") {
-                return new Token("unexpected", v)
-            }
-            return v;
-        })
-        .filter(v => !excludeTokens.includes(v.type));
-    console.debug(tokens);
-    return tokens
-}
-
-const runCode = async (code: string) => {
-  await invoke('set_code', { tokens: safeTokenize(code, bytecodeGrammar)});
-}
+import {Stack} from "@mui/material";
+import Panel from "./components/panel";
+import Console from "./components/console";
+import {Addresses} from "./components/addresses";
+import {CodeEditor} from "./components/editor";
 
 function App() {
-  const [code, setCode] = React.useState("");
+  const [logs, setLogs] = React.useState([]);
   return (
     <Stack
       direction="column"
@@ -39,25 +22,18 @@ function App() {
         alignItems="center"
         spacing={0}
       >
-        <Stack>
-          <div className="address-book">
-
-          </div>
+        <Stack
+          direction="column"
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={0}
+        >
+          <Addresses/>
+          <Panel/>
         </Stack>
-        <Stack>
-          <Editor
-            id="editor"
-            value={code}
-            onValueChange={code => setCode(code)}
-            highlight={code => highlight(code, bytecodeGrammar, 'bytecode')}
-            padding={10}
-          />
-          <Button variant="contained"> Save & Validate </Button>
-        </Stack>
+        <CodeEditor/>
       </Stack>
-      <div className="console">
-
-      </div>
+      <Console logs={logs}/>
     </Stack>
   )
 }
