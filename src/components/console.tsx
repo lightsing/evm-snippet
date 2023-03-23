@@ -1,14 +1,7 @@
 import React from 'react'
 import { Typography, Box } from '@mui/material'
-
-interface Log {
-    level: 'debug' | 'info' | 'warn' | 'error'
-    message: string
-}
-
-interface ConsoleProps {
-    logs: Array<Log>
-}
+import { useAtom } from 'jotai'
+import { logsAtom } from '../atoms'
 
 const LevelColor = {
     debug: '#bbbbbb',
@@ -17,7 +10,8 @@ const LevelColor = {
     error: '#f0524f',
 }
 
-const Console = ({ logs }: ConsoleProps) => {
+const Console = () => {
+    const [logs] = useAtom(logsAtom)
     return (
         <Box
             sx={{

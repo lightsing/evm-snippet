@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Grid, MenuItem, TextField, Typography } from '@mui/material'
+import { Button, Grid, MenuItem, TextField } from '@mui/material'
 import { useAtom } from 'jotai'
 import { addressesAtom } from '../atoms'
 
