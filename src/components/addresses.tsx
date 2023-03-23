@@ -4,10 +4,12 @@ import React from 'react'
 import { AddressItem } from './address'
 import { AddressDialog } from './addressDialog'
 import { useAtom } from 'jotai'
-import { addressesAtom } from '../atoms'
+import { activeAddressAtom, addressCodeMapAtom, addressesAtom } from '../atoms'
 
 export const Addresses = () => {
     const [addresses, setAddresses] = useAtom(addressesAtom)
+    const [activeAddress, setActiveAddress] = useAtom(activeAddressAtom)
+    const [addressCodeMap, setAddressCodeMapAtom] = useAtom(addressCodeMapAtom)
     const [dialogOpen, setDialogOpen] = React.useState(false)
 
     return (
@@ -18,9 +20,28 @@ export const Addresses = () => {
                         index={index}
                         address={address}
                         onEdit={(newVal) => {
+                            const oldAddress = addresses[index]
+                            if (activeAddress === oldAddress) {
+                                setActiveAddress(newVal)
+                            }
+                            if (addressCodeMap.has(oldAddress)) {
+                                const o = new Map(addressCodeMap)
+                                o.set(newVal, o.get(oldAddress)!)
+                                o.delete(oldAddress)
+                                setAddressCodeMapAtom(o)
+                            }
                             setAddresses([...addresses.slice(0, index), newVal, ...addresses.slice(index + 1)])
                         }}
                         onDelete={() => {
+                            let deleted = addresses[index]
+                            if (activeAddress === deleted) {
+                                setActiveAddress(null)
+                            }
+                            if (addressCodeMap.has(deleted)) {
+                                const o = new Map(addressCodeMap)
+                                o.delete(deleted)
+                                setAddressCodeMapAtom(o)
+                            }
                             setAddresses(addresses.slice(0, index).concat(addresses.slice(index + 1)))
                         }}
                     />
