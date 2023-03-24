@@ -1,26 +1,66 @@
 import React, { useState } from 'react'
 import { Button, Grid, MenuItem, TextField } from '@mui/material'
 import { useAtom } from 'jotai'
-import { addressesAtom } from '../atoms'
+import { addressCodeMapAtom, addressesAtom, logsAtom } from '../atoms'
+import { invoke } from '@tauri-apps/api'
+import { safeTokenize } from '../util'
+import { bytecodeGrammar } from '../lang'
+import { Token } from 'prismjs'
 
 const Panel = () => {
+    const [, setLogs] = useAtom(logsAtom)
     const [addresses] = useAtom(addressesAtom)
+    const [addressCodeMap] = useAtom(addressCodeMapAtom)
     const [txFrom, setTxFrom] = useState('')
     const [txTo, setTxTo] = useState('')
     const [gas, setGas] = useState('')
     const [value, setValue] = useState('')
-    const [callData, setCallData] = useState('')
+    const [calldata, setCalldata] = useState('')
 
     const resetAll = () => {
         setTxFrom('')
         setTxTo('')
         setGas('')
         setValue('')
-        setCallData('')
+        setCalldata('')
     }
 
     const execute = () => {
-        // Add your execution logic here
+        const inner = async () => {
+
+            const accounts = addresses.map((address) => {
+                if (addressCodeMap.has(address)) {
+                    return {
+                        address: address,
+                        code: safeTokenize(addressCodeMap.get(address)!, bytecodeGrammar)
+                    }
+                } else {
+                    return {
+                        address: address,
+                        code: []
+                    }
+                }
+            });
+
+            console.log(accounts);
+
+            try {
+                await invoke(
+                    'execute',
+                    {
+                        accounts: accounts,
+                        from: txFrom,
+                        to: txTo,
+                        gas: gas,
+                        value: value,
+                        calldata: calldata,
+                    }
+                );
+            } catch (e) {
+                setLogs((old) => [...old, { level: 'error', message: e as string }])
+            }
+        };
+        inner()
     }
 
     return (
@@ -76,8 +116,8 @@ const Panel = () => {
             <Grid item xs={12}>
                 <TextField
                     label="Call Data"
-                    value={callData}
-                    onChange={(e) => setCallData(e.target.value)}
+                    value={calldata}
+                    onChange={(e) => setCalldata(e.target.value)}
                     multiline
                     rows={4}
                     fullWidth

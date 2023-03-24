@@ -1,11 +1,12 @@
 import Editor from 'react-simple-code-editor'
-import { Grammar, highlight, Token, tokenize } from 'prismjs'
-import { bytecodeGrammar, excludeTokens } from '../lang'
+import { highlight } from 'prismjs'
+import { bytecodeGrammar } from '../lang'
 import { Button, Stack } from '@mui/material'
 import React from 'react'
 import { invoke } from '@tauri-apps/api/tauri'
 import { useAtom } from 'jotai'
 import { activeAddressAtom, addressCodeMapAtom, logsAtom } from '../atoms'
+import { safeTokenize } from '../util'
 
 export const CodeEditor = () => {
     const [, setLogs] = useAtom(logsAtom)
@@ -55,17 +56,4 @@ export const CodeEditor = () => {
             </Button>
         </Stack>
     )
-}
-
-const safeTokenize = (code: string, grammar: Grammar): Token[] => {
-    const tokens = tokenize(code, grammar)
-        .map((v) => {
-            if (typeof v === 'string') {
-                return new Token('unexpected', v)
-            }
-            return v
-        })
-        .filter((v) => !excludeTokens.includes(v.type))
-    console.log(tokens)
-    return tokens
 }
