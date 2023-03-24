@@ -45,7 +45,7 @@ const Panel = () => {
             console.log(accounts);
 
             try {
-                await invoke(
+                const traces = await invoke(
                     'execute',
                     {
                         accounts: accounts,
@@ -56,6 +56,14 @@ const Panel = () => {
                         calldata: calldata,
                     }
                 );
+                setLogs(
+                  [
+                    {
+                      level: 'info',
+                      message: JSON.stringify(traces, null, 2)
+                    }
+                  ]
+                )
             } catch (e) {
                 setLogs((old) => [...old, { level: 'error', message: e as string }])
             }

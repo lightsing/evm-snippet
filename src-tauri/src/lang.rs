@@ -20,32 +20,19 @@ pub struct Token {
     content: String,
 }
 
+#[derive(Debug, thiserror::Error)]
 pub enum LangError {
-    Unexpected {
-        waiting_number: bool,
-        content: String,
-    },
+    #[error("unexpected token: {0}")]
+    Unexpected(String),
+    #[error("expecting number literal of PUSH{0}")]
     UncompletedPush(u8),
+    #[error("Expecting opcode but got number literal")]
     UnexpectedNumber,
 }
 
 impl Serialize for LangError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        match self {
-            LangError::UncompletedPush(len) => {
-                serializer.serialize_str(format!("Expecting number literal of PUSH{}", len).as_str())
-            },
-            LangError::UnexpectedNumber => {
-                serializer.serialize_str("Expecting opcode but got number literal")
-            },
-            LangError::Unexpected{ waiting_number, content } => {
-                serializer.serialize_str(format!(
-                    "Expecting {} but got '{}'",
-                    if *waiting_number { "number literal" } else { "opcode" },
-                    content
-                ).as_str())
-            },
-        }
+        serializer.serialize_str(format!("{}", self).as_str())
     }
 }
 
@@ -78,10 +65,7 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Bytecode, LangError> {
                 debug!("{}", op);
             }
             TokenType::Unexpected => {
-                return Err(LangError::Unexpected {
-                    waiting_number: push_n.is_some(),
-                    content: token.content,
-                });
+                return Err(LangError::Unexpected(token.content));
             }
         }
     }
