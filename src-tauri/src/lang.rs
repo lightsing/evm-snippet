@@ -4,6 +4,7 @@ use eth_types::evm_types::OpcodeId;
 use log::debug;
 use serde::{Deserialize, Serialize, Serializer};
 use tauri::InvokeError;
+use crate::error::LangError;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -18,22 +19,6 @@ pub struct Token {
     #[serde(rename = "type")]
     ty: TokenType,
     content: String,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum LangError {
-    #[error("unexpected token: {0}")]
-    Unexpected(String),
-    #[error("expecting number literal of PUSH{0}")]
-    UncompletedPush(u8),
-    #[error("Expecting opcode but got number literal")]
-    UnexpectedNumber,
-}
-
-impl Serialize for LangError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        serializer.serialize_str(format!("{}", self).as_str())
-    }
 }
 
 pub fn parse_tokens(tokens: Vec<Token>) -> Result<Bytecode, LangError> {

@@ -4,7 +4,10 @@ windows_subsystem = "windows"
 )]
 
 mod lang;
+mod helper;
+mod error;
 
+use std::collections::HashMap;
 use std::str::FromStr;
 use anyhow::{anyhow, bail};
 use eth_types::{Address, Bytecode, GethExecTrace, ToLittleEndian, Word};
@@ -13,8 +16,10 @@ use log::debug;
 use mock::{eth, TestContext};
 use tauri::InvokeError;
 use serde::{Deserialize, Serialize, Serializer};
+use crate::error::{AccountError, ExecuteError};
 
-use crate::lang::{LangError, parse_tokens, Token};
+use crate::lang::{parse_tokens, Token};
+use crate::helper::{deserialize_option_string, parse_word};
 
 #[tauri::command]
 fn validate_code(tokens: Vec<Token>) -> Result<(), InvokeError> {
@@ -28,27 +33,20 @@ const MAX_ALLOWED_ACCOUNTS: usize = 10;
 #[derive(Debug, Deserialize)]
 struct Account {
     address: String,
+    #[serde(default, deserialize_with = "deserialize_option_string")]
+    nonce: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_option_string")]
+    balance: Option<String>,
     code: Vec<Token>,
+    storage: Vec<(String, String)>,
 }
 
 #[derive(Debug)]
 struct ParsedAccount {
     address: Address,
+    nonce: Word,
+    balance: Word,
     code: Option<Bytecode>,
-}
-
-#[derive(Debug, thiserror::Error)]
-enum AccountError {
-    #[error("invalid address: \"{0}\"")]
-    InvalidAddress(String),
-    #[error(transparent)]
-    InvalidCode(#[from] LangError),
-}
-
-impl Serialize for AccountError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        serializer.serialize_str(format!("{}", self).as_str())
-    }
 }
 
 impl TryFrom<Account> for ParsedAccount {
@@ -56,72 +54,50 @@ impl TryFrom<Account> for ParsedAccount {
     fn try_from(account: Account) -> Result<Self, Self::Error> {
         let address = Address::from_str(&account.address)
             .map_err(|_| AccountError::InvalidAddress(account.address))?;
-        if account.code.is_empty() {
-            Ok(ParsedAccount {
-                address,
-                code: None,
-            })
-        } else {
-            Ok(ParsedAccount {
-                address,
-                code: Some(parse_tokens(account.code)?),
-            })
+        let mut parsed_account = ParsedAccount {
+            address,
+            nonce: Word::zero(),
+            balance: eth(1),
+            code: None,
+        };
+        if let Some(nonce) = account.nonce {
+            parsed_account.nonce = parse_word(nonce)?;
         }
+        if !account.code.is_empty() {
+            parsed_account.code = Some(parse_tokens(account.code)?);
+        }
+        Ok(parsed_account)
     }
 }
 
-fn parse_may_empty_word(literal: &str) -> Result<Option<Word>, AccountError> {
-    if literal.is_empty() {
-        return Ok(None);
-    }
-    Ok(
-        Some(
-            if literal.starts_with("0x") {
-                Word::from_str_radix(&literal[2..], 16)
-                    .map_err(|_| AccountError::InvalidAddress(literal.to_string()))?
-            } else {
-                Word::from_str(literal)
-                    .map_err(|_| AccountError::InvalidAddress(literal.to_string()))?
-            }
-        )
-    )
-}
-
-#[derive(Debug, thiserror::Error)]
-enum ExecuteError {
-    #[error("invalid number: {0}")]
-    InvalidNumber(String),
-    #[error(transparent)]
-    Account(#[from] AccountError),
-    #[error("geth error: {0}")]
-    Geth(#[from] eth_types::Error),
-}
-
-impl Serialize for ExecuteError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        serializer.serialize_str(format!("{}", self).as_str())
-    }
-}
-
-#[tauri::command]
-fn execute(
+#[derive(Debug, Deserialize)]
+struct ExecuteArgs {
     accounts: Vec<Account>,
     from: String,
     to: String,
-    gas: String,
-    value: String,
+    #[serde(default, deserialize_with = "deserialize_option_string")]
+    gas: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_option_string")]
+    value: Option<String>,
     calldata: String,
-) -> Result<Vec<GethExecTrace>, ExecuteError> {
+}
+
+
+#[tauri::command]
+fn execute(args: ExecuteArgs) -> Result<Vec<GethExecTrace>, ExecuteError> {
+    let ExecuteArgs {
+        accounts, from, to, gas, value, calldata
+    } = args;
     println!("{:?}", accounts);
-    println!("from: {}, to: {}, gas: {}, value: {}", from, to, gas, value);
     let accounts = accounts
         .into_iter()
         .map(ParsedAccount::try_from)
         .collect::<Result<Vec<ParsedAccount>, AccountError>>()?;
     let from = Address::from_str(&from).map_err(|_| AccountError::InvalidAddress(from))?;
     let to = Address::from_str(&to).map_err(|_| AccountError::InvalidAddress(to))?;
-    let gas = parse_may_empty_word(gas.as_str())?;
-    let value = parse_may_empty_word(value.as_str())?;
+    let gas = parse_word(gas.unwrap_or_else(|| "0xFFFFF".to_string()))?;
+    let value = parse_word(value.unwrap_or_else(|| "0".to_string()))?;
+    println!("from: {}, to: {}, gas: {}, value: {}", from, to, gas, value);
 
     let ctx = TestContext::<MAX_ALLOWED_ACCOUNTS, 1>::new(
         None,
@@ -138,13 +114,9 @@ fn execute(
         |mut txs, accs| {
             txs[0]
                 .from(from)
-                .to(to);
-            if let Some(gas) = gas {
-                txs[0].gas(gas);
-            }
-            if let Some(value) = value {
-                txs[0].value(value);
-            }
+                .to(to)
+                .gas(gas)
+                .value(value);
         },
         |block, _tx| block.number(0xcafe_u64),
     )?;
