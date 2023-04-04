@@ -4,45 +4,33 @@ import React from 'react'
 import { AddressItem } from './address'
 import { AddressDialog } from './addressDialog'
 import { useAtom } from 'jotai'
-import { activeAddressAtom, addressCodeMapAtom, addressesAtom } from '../atoms'
+import { accountsAtom } from '../atoms'
+import { saveState } from '../util'
+
+const ACCOUNTS_ATOM = 'ACCOUNTS_ATOM'
 
 export const Addresses = () => {
-    const [addresses, setAddresses] = useAtom(addressesAtom)
-    const [activeAddress, setActiveAddress] = useAtom(activeAddressAtom)
-    const [addressCodeMap, setAddressCodeMapAtom] = useAtom(addressCodeMapAtom)
+    const [accounts, setAccounts] = useAtom(accountsAtom)
     const [dialogOpen, setDialogOpen] = React.useState(false)
 
     return (
         <Stack>
             <List>
-                {addresses.map((address, index) => (
+                {accounts.map((account, index) => (
                     <AddressItem
                         index={index}
-                        address={address}
+                        key={index}
+                        address={account.address}
                         onEdit={(newVal) => {
-                            const oldAddress = addresses[index]
-                            if (activeAddress === oldAddress) {
-                                setActiveAddress(newVal)
-                            }
-                            if (addressCodeMap.has(oldAddress)) {
-                                const o = new Map(addressCodeMap)
-                                o.set(newVal, o.get(oldAddress)!)
-                                o.delete(oldAddress)
-                                setAddressCodeMapAtom(o)
-                            }
-                            setAddresses([...addresses.slice(0, index), newVal, ...addresses.slice(index + 1)])
+                            const data = [...accounts.slice(0, index), newVal, ...accounts.slice(index + 1)]
+                            setAccounts(data)
+                            saveState(ACCOUNTS_ATOM,data)
                         }}
                         onDelete={() => {
-                            let deleted = addresses[index]
-                            if (activeAddress === deleted) {
-                                setActiveAddress(null)
-                            }
-                            if (addressCodeMap.has(deleted)) {
-                                const o = new Map(addressCodeMap)
-                                o.delete(deleted)
-                                setAddressCodeMapAtom(o)
-                            }
-                            setAddresses(addresses.slice(0, index).concat(addresses.slice(index + 1)))
+                            const data = accounts.slice(0, index).concat(accounts.slice(index + 1))
+                            setAccounts(data)
+                            saveState(ACCOUNTS_ATOM,data)
+
                         }}
                     />
                 ))}
@@ -53,8 +41,10 @@ export const Addresses = () => {
             <AddressDialog
                 open={dialogOpen}
                 initialValue=""
-                onSave={(address) => {
-                    setAddresses([...addresses, address])
+                onSave={(account) => {
+                    const data = [...accounts, account]
+                    setAccounts(data)
+                    saveState(ACCOUNTS_ATOM,data)
                     setDialogOpen(false)
                 }}
                 onClose={() => setDialogOpen(false)}

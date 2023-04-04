@@ -1,20 +1,26 @@
-import React, { useState } from 'react'
+import React, { useState, ChangeEvent } from 'react'
 import { Button, Grid, MenuItem, TextField } from '@mui/material'
 import { useAtom } from 'jotai'
-import { addressCodeMapAtom, addressesAtom, logsAtom } from '../atoms'
+import { accountsAtom, logsAtom } from '../atoms'
 import { invoke } from '@tauri-apps/api'
 import { safeTokenize } from '../util'
 import { bytecodeGrammar } from '../lang'
+import web3 from 'web3'
 import { Token } from 'prismjs'
+
+type KeyValuePair = {
+    key: string;
+    value: string;
+  };
 
 const Panel = () => {
     const [, setLogs] = useAtom(logsAtom)
-    const [addresses] = useAtom(addressesAtom)
-    const [addressCodeMap] = useAtom(addressCodeMapAtom)
+    const [accounts] = useAtom(accountsAtom)
     const [txFrom, setTxFrom] = useState('')
     const [txTo, setTxTo] = useState('')
     const [gas, setGas] = useState('')
     const [value, setValue] = useState('')
+
     const [calldata, setCalldata] = useState('')
 
     const resetAll = () => {
@@ -27,53 +33,54 @@ const Panel = () => {
 
     const execute = () => {
         const inner = async () => {
-
-            const accounts = addresses.map((address) => {
-                if (addressCodeMap.has(address)) {
-                    return {
-                        address: address,
-                        code: safeTokenize(addressCodeMap.get(address)!, bytecodeGrammar)
-                    }
-                } else {
-                    return {
-                        address: address,
-                        code: []
-                    }
+            const formattedAccounts = accounts.map(({ address, code, nonce, balance, storage }) => {
+                return {
+                    address: address,
+                    code: code ? safeTokenize(code, bytecodeGrammar) : [],
+                    nonce,
+                    balance: balance ? web3.utils.toWei(balance!) : '',
+                    storage: storage.map((item:KeyValuePair) => [item.key, item.value]),
                 }
-            });
+            })
 
-            console.log(accounts);
+            console.log({
+                accounts: formattedAccounts,
+                from: txFrom,
+                to: txTo,
+                gas: gas,
+                value: value,
+                calldata: calldata,
+            })
 
             try {
-                const traces = await invoke(
-                    'execute',
-                    {
-                        accounts: accounts,
+                const traces = await invoke('execute', {
+                    args: {
+                        accounts: formattedAccounts,
                         from: txFrom,
                         to: txTo,
                         gas: gas,
                         value: value,
                         calldata: calldata,
-                    }
-                );
-                setLogs(
-                  [
+                    },
+                })
+                setLogs([
                     {
-                      level: 'info',
-                      message: JSON.stringify(traces, null, 2)
-                    }
-                  ]
-                )
+                        level: 'info',
+                        message: JSON.stringify(traces, null, 2),
+                        id: new Date().getTime(),
+                    },
+                ])
             } catch (e) {
-                setLogs((old) => [...old, { level: 'error', message: e as string }])
+                console.log('error', e)
+                setLogs((old) => [...old, { level: 'error', message: e as string, id: new Date().getTime() }])
             }
-        };
+        }
         inner()
     }
 
     return (
-        <Grid container spacing={2}>
-            <Grid item xs={12}>
+        <Grid container spacing={2} style={{ maxWidth: '1000px' }}>
+            <Grid item xs={6}>
                 <TextField
                     select
                     label="Tx From"
@@ -81,14 +88,14 @@ const Panel = () => {
                     onChange={(e) => setTxFrom(e.target.value)}
                     fullWidth
                     InputProps={{ sx: { fontFamily: '"Fira code", "Fira Mono", monospace' } }}>
-                    {addresses.map((address, index) => (
-                        <MenuItem key={index} value={address}>
-                            {address}
+                    {accounts.map((account, index) => (
+                        <MenuItem key={index} value={account.address}>
+                            {account.address}
                         </MenuItem>
                     ))}
                 </TextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
                 <TextField
                     select
                     label="Tx To"
@@ -96,9 +103,9 @@ const Panel = () => {
                     onChange={(e) => setTxTo(e.target.value)}
                     fullWidth
                     InputProps={{ sx: { fontFamily: '"Fira code", "Fira Mono", monospace' } }}>
-                    {addresses.map((address, index) => (
-                        <MenuItem key={index} value={address}>
-                            {address}
+                    {accounts.map((account, index) => (
+                        <MenuItem key={index} value={account.address}>
+                            {account.address}
                         </MenuItem>
                     ))}
                 </TextField>
@@ -132,6 +139,7 @@ const Panel = () => {
                     InputProps={{ sx: { fontFamily: '"Fira code", "Fira Mono", monospace' } }}
                 />
             </Grid>
+
             <Grid item xs={12}>
                 <Button variant="contained" onClick={resetAll}>
                     Reset All
