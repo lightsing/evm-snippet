@@ -5,12 +5,12 @@ const initialAccounts = [
   {
     address: '0x000000000000000000000000000000000cafe111',
     code: '',
-    storage: []
+    storage: [{ key: '', value: '' }]
   },
   {
     address: '0x000000000000000000000000000000000cafe222',
     code: '',
-    storage: []
+    storage: [{ key: '', value: '' }]
   }
 ]
 
@@ -22,9 +22,9 @@ export interface  Account {
   storage: any,
 }
 
-console.log(loadState('ACCOUNTS_ATOM') || initialAccounts)
+console.log(loadState('ACCOUNT_ATOM') || initialAccounts)
 
-export const accountsAtom = atom<Account[]>(loadState('ACCOUNTS_ATOM') as Account[] || initialAccounts)
+export const accountsAtom = atom<Account[]>(loadState('ACCOUNT_ATOM') as Account[] || initialAccounts)
 export interface Log {
     level: 'success' | 'info' | 'warning' | 'error'
     message: string

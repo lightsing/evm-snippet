@@ -7,7 +7,7 @@ import { useAtom } from 'jotai'
 import { accountsAtom } from '../atoms'
 import { saveState } from '../util'
 
-const ACCOUNTS_ATOM = 'ACCOUNTS_ATOM'
+const ACCOUNT_ATOM = 'ACCOUNT_ATOM'
 
 export const Addresses = () => {
     const [accounts, setAccounts] = useAtom(accountsAtom)
@@ -24,12 +24,12 @@ export const Addresses = () => {
                         onEdit={(newVal) => {
                             const data = [...accounts.slice(0, index), newVal, ...accounts.slice(index + 1)]
                             setAccounts(data)
-                            saveState(ACCOUNTS_ATOM,data)
+                            saveState(ACCOUNT_ATOM,data)
                         }}
                         onDelete={() => {
                             const data = accounts.slice(0, index).concat(accounts.slice(index + 1))
                             setAccounts(data)
-                            saveState(ACCOUNTS_ATOM,data)
+                            saveState(ACCOUNT_ATOM,data)
 
                         }}
                     />
@@ -44,7 +44,7 @@ export const Addresses = () => {
                 onSave={(account) => {
                     const data = [...accounts, account]
                     setAccounts(data)
-                    saveState(ACCOUNTS_ATOM,data)
+                    saveState(ACCOUNT_ATOM,data)
                     setDialogOpen(false)
                 }}
                 onClose={() => setDialogOpen(false)}

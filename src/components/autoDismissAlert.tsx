@@ -11,15 +11,15 @@ export default function VerticalAlerts() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const logLength = logs.length
-      if(logLength) {
-        setLogs((prevLogs) => prevLogs.slice(1, logLength));
-      }
-    }, 5 * 1000); 
-    return () => {
-      clearTimeout(timer);
-    };
+    // const timer = setTimeout(() => {
+    //   const logLength = logs.length
+    //   if(logLength) {
+    //     setLogs((prevLogs) => prevLogs.slice(1, logLength));
+    //   }
+    // }, 5 * 1000); 
+    // return () => {
+    //   clearTimeout(timer);
+    // };
   },[logs])
   
 
@@ -30,7 +30,8 @@ export default function VerticalAlerts() {
           position: 'fixed',
           bottom: '36px',
           left: '60px',
-          zIndex: 1300,
+          zIndex: 99999999999,
+          maxWidth: 'calc(100vw - 120px)'
         }}
       >
         {logs.map((logData) => (
