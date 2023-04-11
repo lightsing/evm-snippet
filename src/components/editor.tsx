@@ -5,35 +5,26 @@ import { Button, Stack } from '@mui/material'
 import React from 'react'
 import { invoke } from '@tauri-apps/api/tauri'
 import { useAtom } from 'jotai'
-import { activeAddressAtom, addressCodeMapAtom, logsAtom } from '../atoms'
+import { logsAtom } from '../atoms'
 import { safeTokenize } from '../util'
 
-export const CodeEditor = () => {
-    const [, setLogs] = useAtom(logsAtom)
-    const [activeAddress] = useAtom(activeAddressAtom)
-    const [addressCodeMap, setAddressCodeMapAtom] = useAtom(addressCodeMapAtom)
-    const [currentEditingAddress, setCurrentEditingAddress] = React.useState<string | null>(null)
-    const [code, setCode] = React.useState('')
+interface AddressItemProps {
+    address?: string
+    onSave: (_: string) => void
+    initialValue: string
+}
 
-    React.useEffect(() => {
-        if (activeAddress !== currentEditingAddress) {
-            if (activeAddress !== null) {
-                setCode(addressCodeMap.get(activeAddress) ?? '')
-            } else {
-                setCode('')
-            }
-            setCurrentEditingAddress(activeAddress)
-            setLogs([])
-        }
-    }, [activeAddress, currentEditingAddress])
+export const CodeEditor = ({ onSave, initialValue }: AddressItemProps) => {
+    const [, setLogs] = useAtom(logsAtom)
+    const [code, setCode] = React.useState(initialValue)
 
     const runCode = async (code: string) => {
         try {
             await invoke('validate_code', { tokens: safeTokenize(code, bytecodeGrammar) })
-            setAddressCodeMapAtom((old) => old.set(activeAddress!!, code))
-            setLogs((old) => [...old, { level: 'info', message: 'Success' }])
+            onSave(code)
+            setLogs((old) => [...old, { level: 'info', message: 'Success', id: new Date().getTime() }])
         } catch (e) {
-            setLogs((old) => [...old, { level: 'error', message: e as string }])
+            setLogs((old) => [...old, { level: 'error', message: e as string, id: new Date().getTime() }])
         }
     }
 
@@ -45,14 +36,13 @@ export const CodeEditor = () => {
                 onValueChange={(code) => setCode(code)}
                 highlight={(code) => highlight(code, bytecodeGrammar, 'bytecode')}
                 padding={10}
-                disabled={currentEditingAddress === null}
                 style={{
                     color: '#bababa',
                     fontFamily: '"Fira code", "Fira Mono", monospace',
                 }}
             />
-            <Button variant="contained" onClick={() => runCode(code)} disabled={currentEditingAddress === null}>
-                Save & Validate
+            <Button variant="contained" onClick={() => runCode(code)}>
+                Validate
             </Button>
         </Stack>
     )

@@ -1,21 +1,18 @@
 import { ListItem, ListItemButton, ListItemText } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
-import FileOpenIcon from '@mui/icons-material/FileOpen'
 import DeleteIcon from '@mui/icons-material/Delete'
 import React from 'react'
 import { AddressDialog } from './addressDialog'
-import { activeAddressAtom } from '../atoms'
-import { useAtom } from 'jotai'
+import {  Account } from '../atoms'
 
 interface AddressItemProps {
     index: number
     address: string
-    onEdit: (_: string) => void
+    onEdit: (_: Account) => void
     onDelete: () => void
 }
 
 export const AddressItem = ({ index, address, onDelete, onEdit }: AddressItemProps) => {
-    const [, setActiveAddressAtom] = useAtom(activeAddressAtom)
     const [dialogOpen, setDialogOpen] = React.useState(false)
 
     return (
@@ -30,10 +27,11 @@ export const AddressItem = ({ index, address, onDelete, onEdit }: AddressItemPro
                 }}
             />
             <ListItemButton>
-                <EditIcon onClick={() => setDialogOpen(true)} />
-            </ListItemButton>
-            <ListItemButton>
-                <FileOpenIcon onClick={() => setActiveAddressAtom(address)} />
+                <EditIcon
+                    onClick={() => {
+                        setDialogOpen(true)
+                    }}
+                />
             </ListItemButton>
             <ListItemButton>
                 <DeleteIcon onClick={onDelete} />
